@@ -9,7 +9,8 @@
 
 var quiz;
 var name = "Name";
-var currentQuestion = -1;
+var currentQuestion = 0;
+var record = -1;
 var quizLength = 0;
 var numAns = 0;
 var userAnswers = [];
@@ -19,6 +20,7 @@ var titles;
 var selectedQuiz = 0;
 var ids;
 var notificationFadeTime = 3000;
+var allquestions =[];
 
 // Initial setup
 $(document).ready(function() {
@@ -68,6 +70,10 @@ $(document).ready(function() {
     $('#placeholderWarning').hide();
     $('#placeholderSuccess').hide();
   });
+$('#create_quiz').hide();
+$('#delete_quiz').hide();
+$('#update_quiz').hide();
+$('#reset_quiz').hide();
 
   //start quiz
   document.getElementById("start_quiz").addEventListener("click", function(e) {
@@ -459,6 +465,8 @@ function resetQuizzes() {
 
 // load target quiz json
 function loadQuiz(target){
+
+
   $.getJSON('quiz/' + target)
   .done(function (data) {
     $('#ajaxloading').hide();
@@ -472,7 +480,29 @@ function loadQuiz(target){
       $('#backHome').show();
     }
     else {
-      quizLength = quiz["questions"].length;
+      quizLength = 2;//quiz["questions"].length;
+      var length = quiz["questions"].length; // user defined length
+
+      for(var i = 0; i < length; i++) {
+          userAnswers.push([NaN,NaN,NaN]);
+      }
+      a=[];
+      for (i=0;i<quiz["questions"].length;++i) a[i]=i;
+
+    // http://stackoverflow.com/questions/962802#962890
+    function shuffle(array) {
+      var tmp, current, top = array.length;
+      if(top) while(--top) {
+        current = Math.floor(Math.random() * (top + 1));
+        tmp = array[current];
+        array[current] = array[top];
+        array[top] = tmp;
+      }
+      return array;
+    };
+    a=shuffle(a)
+    console.log(a)
+
       $('#nextQuestion').show();
       $('#answerChoices').show();
       $('#description').text(quiz["description"]);
@@ -1092,7 +1122,8 @@ function submitEditedQuiz(){
 
 // Show questions and answers
 function generateQA (){
-  $('#questionNumber').text("Question " + (currentQuestion+1)).hide().fadeIn();
+
+  $('#questionNumber').text("Question " + (currentQuestion+1)).hide().fadeIn();//+ (currentQuestion+1)).hide().fadeIn();
   $('#question').text(quiz["questions"][currentQuestion]["text"]).hide().fadeIn();
   numAns = quiz["questions"][currentQuestion]["answers"].length;
   // if answered already
@@ -1153,7 +1184,7 @@ function generateQA (){
       if ( i == 0 ) return false;
     });
   });
-  if (currentQuestion === 0) {
+  if (record === 0) {
     $('#previousQuestion').hide();
   }
   else {
@@ -1162,12 +1193,12 @@ function generateQA (){
 }
 
 function back(){
-  if (currentQuestion <= 0) {
+  if (record <= 0) {
     $('#previousQuestion').hide();
   }
   else {
-    currentQuestion--;
-    if (currentQuestion <= 0) {
+    record--;
+    if (record <= 0) {
       $('#previousQuestion').hide();
     }
     generateQA();
@@ -1177,6 +1208,15 @@ function back(){
 
   MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
   MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+}
+
+function sortFunction(a, b) {
+    if (a[0] === b[0]) {
+        return 0;
+    }
+    else {
+        return (a[0] < b[0]) ? -1 : 1;
+    }
 }
 
 // Check which radio button is checked and record
@@ -1196,10 +1236,15 @@ function whichChecked() {
       }
       // if new answer
       else {
-        if (i === quiz["questions"][currentQuestion]["correct_answer"])
-          userAnswers.push([currentQuestion, true, i]);
+        if (i === quiz["questions"][currentQuestion]["correct_answer"]){
+          //userAnswers.push([currentQuestion, true, i]);
+          userAnswers[currentQuestion][1] = true;
+          userAnswers[currentQuestion][2] = i;
+          }
         else
-          userAnswers.push([currentQuestion, false, i]);
+        userAnswers[currentQuestion][1] = false;
+        userAnswers[currentQuestion][2] = i;
+          //userAnswers.push([currentQuestion, false, i]);
       }
     }
   }
@@ -1289,7 +1334,7 @@ function userScore() {
 
 // Calculate Score and add to global + user scores
 function calculateScore() {
-  for (var i = 0; i < quizLength; i++){
+  for (var i = 0; i < quizLength; i++){ //for (var i = 0; i < quizLength; i++){
     if (userAnswers[i][1]) {
       quiz["questions"][i]["global_correct"]+=1;
       score++;
@@ -1300,7 +1345,9 @@ function calculateScore() {
 
 // Display score table
 function scorePerQuestionTable() {
-  for (var r = 0; r < quizLength; r++) {
+//var r;
+  for (const r of allquestions) {//for (var r = 0; r < quizLength; r++) {
+    console.log(r)
     $('#scoreTable').fadeIn("slow");
     var scorePercent = Math.round(100*quiz["questions"][r]["global_correct"]/quiz["questions"][r]["global_total"]);
     if (userAnswers[r][1])
@@ -1364,17 +1411,19 @@ function createPieChart(wrong,right,percentW,percentR) {
 
 // Go to next question in quiz
 function nextQuestion() {
+
+
   // Before end of quiz
-  if (currentQuestion<quizLength-1) {
+  if (record<quizLength-1) {
     // if one of the quiz questions
-    if (currentQuestion > -1) {
+    if (record > -1) {
       // if no answer is checked
       if (!$("input[name='answers']").is(':checked')){
         $('#answerWarning').show();
         $("#answerWarning").fadeTo(notificationFadeTime, 500).slideUp(500, function(){
           $("#answerWarning").hide();
         });
-        if (currentQuestion === 0) {
+        if (record === 0) {
           $('#previousQuestion').hide();
         }
         else {
@@ -1390,8 +1439,12 @@ function nextQuestion() {
         else {
           $('#previousQuestion').show();
         }
+          record += 1;
+        currentQuestion = a[record];
+        allquestions.push(currentQuestion);
+        //console.log(currentQuestion);
+
         whichChecked();
-        currentQuestion+=1;
         generateQA();
       }
 
@@ -1399,7 +1452,9 @@ function nextQuestion() {
     // if before first question of quiz
     else {
       $('#previousQuestion').hide();
-      currentQuestion+=1;
+      record += 1;
+      currentQuestion = a[record];
+      allquestions.push(currentQuestion);
       generateQA();
     }
 
