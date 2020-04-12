@@ -1128,7 +1128,7 @@ function generateQA (){
   numAns = quiz["questions"][currentQuestion]["answers"].length;
   // if answered already
   if (record < userAnswers.length) {//if (currentQuestion < userAnswers.length) {       userAnswers[currentQuestion][2] != NaN
-    console.log(userAnswers[currentQuestion][2])
+    //console.log(userAnswers[currentQuestion][2])
     $('input[name="answers"][id="' + userAnswers[currentQuestion][2] + '"]').prop('checked',true);
     for (var i = 0; i < numAns; i++) {
       $('#b' + i).show();
@@ -1148,7 +1148,7 @@ function generateQA (){
   }
   // if hasn't been answered before
   else {
-    console.log(userAnswers[currentQuestion][2])
+    //console.log(userAnswers[currentQuestion][2])
     // uncheck answers
     $('input[name="answers"]').prop('checked',false);
     for (var i = 0; i < numAns; i++) {
@@ -1215,8 +1215,8 @@ function back(){
 
 // Check which radio button is checked and record
 function whichChecked() {
-  console.log("before");
-  console.log(currentQuestion);
+  //console.log("before");
+  //console.log(currentQuestion);
   for (var i = 0; i < numAns; i++) {//for (var i = 0; i < numAns; i++) {
     if ($("input[name='answers'][id='" + i + "']").is(':checked')) {
       // if already added to userAnswers
@@ -1224,14 +1224,14 @@ function whichChecked() {
         if (i === quiz["questions"][currentQuestion]["correct_answer"]) {
           userAnswers[currentQuestion][1] = true;
           userAnswers[currentQuestion][2] = i;
-          console.log(currentQuestion);
-          console.log(userAnswers[currentQuestion][1]);
+        //  console.log(currentQuestion);
+        //  console.log(userAnswers[currentQuestion][1]);
         }
         else {
           userAnswers[currentQuestion][1] = false;
           userAnswers[currentQuestion][2] = i;
-          console.log(currentQuestion);
-          console.log(userAnswers[currentQuestion][1]);
+        //  console.log(currentQuestion);
+        //  console.log(userAnswers[currentQuestion][1]);
         }
       }
       // if new answer
@@ -1240,14 +1240,14 @@ function whichChecked() {
           //userAnswers.push([currentQuestion, true, i]);
           userAnswers[currentQuestion][1] = true;
           userAnswers[currentQuestion][2] = i;
-          console.log(currentQuestion);
-          console.log(userAnswers[currentQuestion][1]);
+      //    console.log(currentQuestion);
+        //  console.log(userAnswers[currentQuestion][1]);
           }
         else
         userAnswers[currentQuestion][1] = false;
         userAnswers[currentQuestion][2] = i;
-        console.log(currentQuestion);
-        console.log(userAnswers[currentQuestion][1]);
+      //  console.log(currentQuestion);
+      //  console.log(userAnswers[currentQuestion][1]);
           //userAnswers.push([currentQuestion, false, i]);
       }
     }
@@ -1292,13 +1292,18 @@ function userScore() {
       };
       userJSON[currentUser] = newUser;
     }
-    for (var n = 0; n < quizLength; n++){
+    for (const n of allquestions){ //for (var n = 0; n < quizLength; n++){
+      console.log(n);
       if (userAnswers[n][1]) {
         quiz["questions"][n]["global_correct"]+=1;
         userJSON[currentUser]["user_correct"]+=1;
+        console.log("right");
+        console.log(userAnswers);
       }
       quiz["questions"][n]["global_total"]+=1;
       userJSON[currentUser]["user_total"]+=1;
+      console.log("all");
+      console.log(userAnswers);
     }
     topTen(userJSON);
 
@@ -1326,7 +1331,7 @@ function userScore() {
   })
   .fail(function() {
     // console.log("Failed to load user JSON");
-    for (var i = 0; i < quizLength; i++){
+    for (const i of allquestions){ //for (var i = 0; i < quizLength; i++){
       if (userAnswers[i][1]) {
         quiz["questions"][i]["global_correct"]+=1;
       }
@@ -1342,6 +1347,7 @@ function calculateScore() {
     if (userAnswers[i][1]) {
       quiz["questions"][i]["global_correct"]+=1;
       score++;
+      //console.log(score);
     }
     quiz["questions"][i]["global_total"]+=1;
   }
@@ -1351,7 +1357,7 @@ function calculateScore() {
 function scorePerQuestionTable() {
 //var r;
   for (const r of allquestions) {//for (var r = 0; r < quizLength; r++) {
-    console.log(r);
+    //console.log(r);
     $('#scoreTable').fadeIn("slow");
     var scorePercent = Math.round(100*quiz["questions"][r]["global_correct"]/quiz["questions"][r]["global_total"]);
     if (userAnswers[r][1])
@@ -1446,10 +1452,15 @@ function nextQuestion() {
          whichChecked();
           record += 1;
         currentQuestion = a[record];
-        allquestions.push(currentQuestion);
-        console.log(currentQuestion);
-
-
+        var state=0;
+        for(var i=0;i<allquestions.length;i++){
+          if(allquestions[i] == currentQuestion){
+            state=1;
+          }
+        }
+        if (state==0){allquestions.push(currentQuestion);}
+        console.log('allquestions');
+        console.log(allquestions);
         generateQA();
 
       }
@@ -1460,8 +1471,15 @@ function nextQuestion() {
       $('#previousQuestion').hide();
       record += 1;
       currentQuestion = a[record];
-      allquestions.push(currentQuestion);
-      console.log(currentQuestion);
+      var state=0;
+      for(var i=0;i<allquestions.length;i++){
+        if(allquestions[i] == currentQuestion){
+          state=1;
+        }
+      }
+      if (state==0){allquestions.push(currentQuestion);}
+      console.log('allquestions');
+      console.log(allquestions);
       generateQA();
     }
 
@@ -1471,6 +1489,8 @@ function nextQuestion() {
 
   // End of quiz
   else {
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
     // Check last question of quiz
     // if answer is not checked
     if (!$("input[name='answers']").is(':checked')){
